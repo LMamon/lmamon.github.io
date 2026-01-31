@@ -1,2 +1,8 @@
-# lmamon.github.io
-Public portfolio
+About
+Projects
+posts
+
+-location
+-interests
+-profile1
+-profile2 
