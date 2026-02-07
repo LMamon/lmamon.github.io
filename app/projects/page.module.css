@@ -1,0 +1,33 @@
+.projects{
+  display: flex;
+  flex: 1 1 0%;
+  align-items: flex-end;
+  font-size: 16px;
+  width: 1006px;
+  height: 432px;
+  justify-content: flex-end;
+  padding-bottom: 164px;
+  padding-right: 164px;
+  outline: 1px solid var(--text-primary);
+}
+
+.projects ul {
+  display: block;
+  height: 76px;
+  width: 832px;
+}
+
+.li {
+  display: list-item;
+  height: 16px;
+  text-align: left;
+  width: 839px;
+}
+
+.projectsRow {
+  display: inline;
+  text-decoration: underline;
+  width: auto;
+  height: auto;
+  text-align: left;
+}
