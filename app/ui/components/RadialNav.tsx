@@ -2,8 +2,25 @@
 
 import { useEffect, useRef } from "react";
 
-export default function RadialNav() {
+export default function RadialNav({
+    hoverAngle = 0,
+    hoverStrength = 0,
+  }: {
+    hoverAngle?: number;
+    hoverStrength?: number;
+  }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hoverAngleRef = useRef(0);
+  const hoverStrengthRef = useRef(0);
+
+  useEffect(() => { 
+    hoverAngleRef.current = hoverAngle; 
+    }, [hoverAngle]
+  );
+  useEffect(() => { 
+    hoverStrengthRef.current = hoverStrength; 
+    }, [hoverStrength]
+  );
 
   useEffect(() => {
     let device: GPUDevice;
@@ -12,6 +29,8 @@ export default function RadialNav() {
     let uniformBuffer: GPUBuffer;
     let bindGroup: GPUBindGroup;
     let format: GPUTextureFormat;
+    let hoverA = 0;          // smoothed angle
+    let hoverS = 0;          // smoothed strength
 
     let raf = 0;
     let msaaTexture: GPUTexture | null = null;
@@ -58,6 +77,7 @@ export default function RadialNav() {
         _pad0      : f32,
         color      : vec4<f32>,
         params     : vec4<f32>, // radius, thickness, spikeHeight, noiseAmount
+        params2    : vec4<f32>,
         };
 
         @group(0) @binding(0)
@@ -106,22 +126,33 @@ export default function RadialNav() {
                     timeSpeed: f32,
                     spikeLo: f32,
                     spikeHi: f32,
-                    layerOpacity: f32) -> f32 {
-
+                    layerOpacity: f32,
+                    mask: f32) -> f32 {
+                                
         // Static angular structure (anchored)
         let n_static = noise(vec2<f32>(ang * angScale, 0.0));
-
+        
         // Time agitation (no rotation: time is on Y axis only)
-        let n_time   = noise(vec2<f32>(ang * angScale, t * timeSpeed));
-
+        let n_time = noise(vec2<f32>(ang * angScale, t * timeSpeed));
+        
         // Mix gives “alive but stable”
         let n = mix(n_static, n_time, 0.6);
-
+        
+        // Damp everything away from the hovered direction
+        let spikeHeight2 = spikeHeight * (0.05 + 2.8 * mask);
+        let noiseAmount2 = noiseAmount * (0.20 + 0.80 * mask);
+        
         // Rare spikes
         let spikes = smoothstep(spikeLo, spikeHi, n);
+        
+        // Radius displacement (masked)
+        let radius = baseRadius + n * noiseAmount2 + spikes * spikeHeight2;
+
+        // Rare spikes
+        // let spikes = smoothstep(spikeLo, spikeHi, n);
 
         // Radius displacement
-        let radius = baseRadius + n * noiseAmount + spikes * spikeHeight;
+        // let radius = baseRadius + n * noiseAmount + spikes * spikeHeight;
 
         // Thickness jitter
         let thickness = baseThickness * (0.65 + 0.8 * n);
@@ -143,6 +174,19 @@ export default function RadialNav() {
         let baseThickness = u.params.y;
         let spikeHeight   = u.params.z;
         let noiseAmount   = u.params.w;
+        let hoverAngle    = u.params2.x;
+
+        let hoverStrength = u.params2.y;
+        let hoverWidth    = u.params2.z;
+
+        // wrapped angular distance (0..pi)
+        let d = abs(atan2(sin(ang - hoverAngle), cos(ang - hoverAngle)));
+
+        // gaussian-ish spotlight (1 near hoverAngle, 0 away)
+        let focus = exp(-0.5 * (d / hoverWidth) * (d / hoverWidth));
+
+        // when not hovering, mask = 1 everywhere (no damping)
+        let mask = mix(1.0, focus, hoverStrength);
 
         let t = u.time;
 
@@ -157,7 +201,8 @@ export default function RadialNav() {
             noiseAmount,
             18.0, 0.8,
             0.82, 0.95,
-            1.00
+            1.00,
+            mask
         );
 
         // Under-rings: slightly offset outward, thicker, lower opacity
@@ -170,7 +215,8 @@ export default function RadialNav() {
             noiseAmount * 0.75,
             10.0, 0.55,
             0.78, 0.92,
-            0.35
+            0.35,
+            mask
         );
 
         a = a + ringLayer(
@@ -181,7 +227,8 @@ export default function RadialNav() {
             noiseAmount * 0.60,
             7.0, 0.40,
             0.76, 0.90,
-            0.22
+            0.22,
+            mask
         );
 
         // Fine-grain “shading” scribble: high frequency, very low opacity
@@ -193,7 +240,8 @@ export default function RadialNav() {
             noiseAmount * 0.40,
             32.0, 1.20,
             0.84, 0.97,
-            0.12
+            0.12,
+            mask
         );
 
         // Clamp final alpha (alpha stacking creates overlap darkening)
@@ -299,6 +347,14 @@ export default function RadialNav() {
     //   const noiseSpeed = 0.55;
     //   const wobble = 0.010;
 
+      // shortest-angle lerp
+      const a0 = hoverA;
+      const a1 = hoverAngleRef.current;
+      const da = Math.atan2(Math.sin(a1 - a0), Math.cos(a1 - a0));
+      hoverA = a0 + da * 0.12; // smoothing factor
+
+      hoverS += (hoverStrengthRef.current - hoverS) * 0.12;
+
       device.queue.writeBuffer(
         uniformBuffer,
         0,
@@ -314,6 +370,8 @@ export default function RadialNav() {
             0.0028,  // thickness
             0.08,   // spike height
             0.030,  // noise amount
+
+            hoverA, hoverS, 0.35, 0.0,
         ])
       );
 
@@ -351,7 +409,10 @@ export default function RadialNav() {
     <canvas
       ref={canvasRef}
       className="radius-canvas"
-      style={{ width: "100%", height: "100%", pointerEvents: "none" }}
+      style={{ 
+        width: "100%", 
+        height: "100%",
+        pointerEvents: "none" }}
     />
   );
 }

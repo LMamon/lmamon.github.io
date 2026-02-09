@@ -7,11 +7,19 @@ function polarToScreen(angle: number, r: number, cx: number, cy: number) {
   };
 }
 
-export function RadialNavOverlay({ nav }: { nav: any[] }) {
+export function RadialNavOverlay({
+  nav,
+  onHover,
+  onLeave,
+}: {
+  nav: any[];
+  onHover: (angle: number) => void;
+  onLeave: () => void;
+}) {
   const size = 500;
-  const cx = size / 1.8;
-  const cy = size / 2.5;
-  const r = size * 0.40;
+  const cx = size / 2.1;
+  const cy = size / 2.1;
+  const r = size * 0.55;
 
   return (
     <svg
@@ -29,21 +37,23 @@ export function RadialNavOverlay({ nav }: { nav: any[] }) {
         const y0 = cy + ny * r;
 
         const x1 = cx + nx * (r + 30);
-        const y1 = cy + ny * (r + 30);
+        const y1 = cy + ny * (r + 40);
 
         const tx = cx + nx * (r + 44);
         const ty = cy + ny * (r + 44);
 
         return (
-            <a
+              <a
                 key={n.label}
                 href={n.href}
+                onMouseEnter={() => onHover(n.angle)}
+                onMouseLeave={onLeave}
                 style={{ pointerEvents: "auto", cursor: "pointer" }}
-            >
+              >
                 <g key={n.label}>
                     <line
                     x1={x0}
-                    y1={y0}
+                    y1={y0+15}
                     x2={x1}
                     y2={y1}
                     stroke="currentColor"

@@ -1,27 +1,26 @@
 .projects{
   display: flex;
   flex: 1 1 0%;
-  align-items: flex-end;
-  font-size: 16px;
-  width: 1006px;
-  height: 432px;
-  justify-content: flex-end;
-  padding-bottom: 164px;
-  padding-right: 164px;
-  outline: 1px solid var(--text-primary);
+  align-items: flex-start;
+  /* font-size: 16px; */
+  /* width: 1006px;
+  height: 432px; */
+  /* padding-bottom: 164px;
+  padding-right: 164px; */
+  justify-content: flex-start;
 }
 
 .projects ul {
   display: block;
-  height: 76px;
-  width: 832px;
+  /* height: 76px; */
+  /* width: 832px; */
 }
 
 .li {
   display: list-item;
   height: 16px;
   text-align: left;
-  width: 839px;
+  /* width: 839px; */
 }
 
 .projectsRow {

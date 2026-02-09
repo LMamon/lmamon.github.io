@@ -1,19 +1,18 @@
 .about {
   display: flex;
   flex: 1 1 0%;
-  align-items: flex-end;
-  font-size: 16px;
-  width: 1006px;
-  height: 432px;
-  justify-content: flex-end;
-  padding-bottom: 164px;
-  padding-right: 164px;
-  outline: 1px solid var(--text-primary);
+  align-items: flex-start;
+  /* align-content: flex-start; */
+  
+  /* width: 25vw; */
+  /* height: 20vh; */
+  justify-content: flex-start;
+  outline: 1px solid red;
 }
 
 .aboutRow {
   display: block;
-  width: 842px;
+  /* width: 842px; */
   height: 17px;
   opacity: 0.9; 
 }
