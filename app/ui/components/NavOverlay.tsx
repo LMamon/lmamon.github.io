@@ -1,12 +1,3 @@
-function polarToScreen(angle: number, r: number, cx: number, cy: number) {
-  return {
-    x: cx + Math.cos(angle) * r,
-    y: cy + Math.sin(angle) * r,
-    dx: Math.cos(angle),
-    dy: Math.sin(angle),
-  };
-}
-
 export function RadialNavOverlay({
   nav,
   onHover,

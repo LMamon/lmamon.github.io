@@ -29,8 +29,8 @@ export default function RadialNav({
     let uniformBuffer: GPUBuffer;
     let bindGroup: GPUBindGroup;
     let format: GPUTextureFormat;
-    let hoverA = 0;          // smoothed angle
-    let hoverS = 0;          // smoothed strength
+    let hoverA = 0; // smoothed angle
+    let hoverS = 0; // smoothed strength
 
     let raf = 0;
     let msaaTexture: GPUTexture | null = null;
@@ -73,11 +73,11 @@ export default function RadialNav({
     const shaderCode = /* wgsl */`
         struct Uniforms {
         resolution : vec2<f32>,
-        time       : f32,
-        _pad0      : f32,
-        color      : vec4<f32>,
-        params     : vec4<f32>, // radius, thickness, spikeHeight, noiseAmount
-        params2    : vec4<f32>,
+        time : f32,
+        _pad0 : f32,
+        color : vec4<f32>,
+        params : vec4<f32>, // radius, thickness, spikeHeight, noiseAmount
+        params2 : vec4<f32>,
         };
 
         @group(0) @binding(0)
@@ -129,127 +129,118 @@ export default function RadialNav({
                     layerOpacity: f32,
                     mask: f32) -> f32 {
                                 
-        // Static angular structure (anchored)
-        let n_static = noise(vec2<f32>(ang * angScale, 0.0));
-        
-        // Time agitation (no rotation: time is on Y axis only)
-        let n_time = noise(vec2<f32>(ang * angScale, t * timeSpeed));
-        
-        // Mix gives “alive but stable”
-        let n = mix(n_static, n_time, 0.6);
-        
-        // Damp everything away from the hovered direction
-        let spikeHeight2 = spikeHeight * (0.05 + 2.8 * mask);
-        let noiseAmount2 = noiseAmount * (0.20 + 0.80 * mask);
-        
-        // Rare spikes
-        let spikes = smoothstep(spikeLo, spikeHi, n);
-        
-        // Radius displacement (masked)
-        let radius = baseRadius + n * noiseAmount2 + spikes * spikeHeight2;
+            //static angular structure
+            let n_static = noise(vec2<f32>(ang * angScale, 0.0));
+            
+            //time agitation (no rotation: time is on Y axis only)
+            let n_time = noise(vec2<f32>(ang * angScale, t * timeSpeed));
+            let n = mix(n_static, n_time, 0.6);
+            
+            // Damp everything away from the hovered direction
+            let spikeHeight2 = spikeHeight * (0.05 + 2.8 * mask);
+            let noiseAmount2 = noiseAmount * (0.20 + 0.80 * mask);
+            
+            //rare spikes
+            let spikes = smoothstep(spikeLo, spikeHi, n);
+            
+            //radius displacement (masked)
+            let radius = baseRadius + n * noiseAmount2 + spikes * spikeHeight2;
 
-        // Rare spikes
-        // let spikes = smoothstep(spikeLo, spikeHi, n);
+            // Thickness jitter
+            let thickness = baseThickness * (0.65 + 0.8 * n);
 
-        // Radius displacement
-        // let radius = baseRadius + n * noiseAmount + spikes * spikeHeight;
+            // Band alpha
+            let edge = abs(r - radius);
+            let a = smoothstep(thickness, 0.0, edge);
 
-        // Thickness jitter
-        let thickness = baseThickness * (0.65 + 0.8 * n);
-
-        // Band alpha
-        let edge = abs(r - radius);
-        let a = smoothstep(thickness, 0.0, edge);
-
-        return a * layerOpacity;
+          return a * layerOpacity;
         }
 
         @fragment
         fn fs_main(@builtin(position) p: vec4<f32>) -> @location(0) vec4<f32> {
-        let uv = (p.xy - 0.5 * u.resolution) / min(u.resolution.x, u.resolution.y);
-        let r   = length(uv);
-        let ang = atan2(uv.y, uv.x);
+            let uv = (p.xy - 0.5 * u.resolution) / min(u.resolution.x, u.resolution.y);
+            let r   = length(uv);
+            let ang = atan2(uv.y, uv.x);
 
-        let baseRadius    = u.params.x;
-        let baseThickness = u.params.y;
-        let spikeHeight   = u.params.z;
-        let noiseAmount   = u.params.w;
-        let hoverAngle    = u.params2.x;
+            let baseRadius    = u.params.x;
+            let baseThickness = u.params.y;
+            let spikeHeight   = u.params.z;
+            let noiseAmount   = u.params.w;
+            let hoverAngle    = u.params2.x;
 
-        let hoverStrength = u.params2.y;
-        let hoverWidth    = u.params2.z;
+            let hoverStrength = u.params2.y;
+            let hoverWidth    = u.params2.z;
 
-        // wrapped angular distance (0..pi)
-        let d = abs(atan2(sin(ang - hoverAngle), cos(ang - hoverAngle)));
+            // wrapped angular distance (0..pi)
+            let d = abs(atan2(sin(ang - hoverAngle), cos(ang - hoverAngle)));
 
-        // gaussian-ish spotlight (1 near hoverAngle, 0 away)
-        let focus = exp(-0.5 * (d / hoverWidth) * (d / hoverWidth));
+            // gaussian-ish spotlight (1 near hoverAngle, 0 away)
+            let focus = exp(-0.5 * (d / hoverWidth) * (d / hoverWidth));
 
-        // when not hovering, mask = 1 everywhere (no damping)
-        let mask = mix(1.0, focus, hoverStrength);
+            // when not hovering, mask = 1 everywhere (no damping)
+            let mask = mix(1.0, focus, hoverStrength);
 
-        let t = u.time;
+            let t = u.time;
 
-        // ---- Stack multiple layers (overlap = darker) ----
-        // Main rim: sharp + dominant
-        var a = 0.0;
-        a = a + ringLayer(
-            r, ang, t,
-            baseRadius,
-            baseThickness,
-            spikeHeight,
-            noiseAmount,
-            18.0, 0.8,
-            0.82, 0.95,
-            1.00,
-            mask
-        );
+            // ---- Stack multiple layers (overlap = darker) ----
+            // Main rim: sharp + dominant
+            var a = 0.0;
+            a = a + ringLayer(
+                r, ang, t,
+                baseRadius,
+                baseThickness,
+                spikeHeight,
+                noiseAmount,
+                18.0, 0.8,
+                0.82, 0.95,
+                1.00,
+                mask
+            );
 
-        // Under-rings: slightly offset outward, thicker, lower opacity
-        // These create the “wide wave with smaller versions under it”.
-        a = a + ringLayer(
-            r, ang, t,
-            baseRadius + 0.006,
-            baseThickness * 2.2,
-            spikeHeight * 0.55,
-            noiseAmount * 0.75,
-            10.0, 0.55,
-            0.78, 0.92,
-            0.35,
-            mask
-        );
+            // Under-rings: slightly offset outward, thicker, lower opacity
+            // These create the “wide wave with smaller versions under it”.
+            a = a + ringLayer(
+                r, ang, t,
+                baseRadius + 0.006,
+                baseThickness * 2.2,
+                spikeHeight * 0.55,
+                noiseAmount * 0.75,
+                10.0, 0.55,
+                0.78, 0.92,
+                0.35,
+                mask
+            );
 
-        a = a + ringLayer(
-            r, ang, t,
-            baseRadius + 0.012,
-            baseThickness * 3.2,
-            spikeHeight * 0.40,
-            noiseAmount * 0.60,
-            7.0, 0.40,
-            0.76, 0.90,
-            0.22,
-            mask
-        );
+            a = a + ringLayer(
+                r, ang, t,
+                baseRadius + 0.012,
+                baseThickness * 3.2,
+                spikeHeight * 0.40,
+                noiseAmount * 0.60,
+                7.0, 0.40,
+                0.76, 0.90,
+                0.22,
+                mask
+            );
 
-        // Fine-grain “shading” scribble: high frequency, very low opacity
-        a = a + ringLayer(
-            r, ang, t,
-            baseRadius + 0.010,
-            baseThickness * 1.6,
-            spikeHeight * 0.25,
-            noiseAmount * 0.40,
-            32.0, 1.20,
-            0.84, 0.97,
-            0.12,
-            mask
-        );
+            // Fine-grain “shading” scribble: high frequency, very low opacity
+            a = a + ringLayer(
+                r, ang, t,
+                baseRadius + 0.010,
+                baseThickness * 1.6,
+                spikeHeight * 0.25,
+                noiseAmount * 0.40,
+                32.0, 1.20,
+                0.84, 0.97,
+                0.12,
+                mask
+            );
 
-        // Clamp final alpha (alpha stacking creates overlap darkening)
-        a = clamp(a, 0.0, 1.0);
+            // Clamp final alpha (alpha stacking creates overlap darkening)
+            a = clamp(a, 0.0, 1.0);
 
-        return vec4(u.color.rgb, a);
-        }
-        `;
+          return vec4(u.color.rgb, a);
+        }`;
 
       pipeline = device.createRenderPipeline({
         layout: "auto",
@@ -333,25 +324,11 @@ export default function RadialNav({
       const bg = hexToRGB01(bgHex);
       const fg = hexToRGB01(fgHex);
 
-      // crude theme flag: background luminance
-      const lum = 0.2126 * bg.r + 0.7152 * bg.g + 0.0722 * bg.b;
-      const theme = lum > 0.5 ? 1.0 : 0.0;
-
-      // Tune these 4 numbers first if you want a different vibe
-    //   const radius = 0.40;
-    //   const thickness = 0.006;
-    //   const glow = 0.06;
-    //   const spikeStrength = 0.55;
-
-    //   const noiseScale = 9.0;
-    //   const noiseSpeed = 0.55;
-    //   const wobble = 0.010;
-
-      // shortest-angle lerp
+      //shortest-angle lerp
       const a0 = hoverA;
       const a1 = hoverAngleRef.current;
       const da = Math.atan2(Math.sin(a1 - a0), Math.cos(a1 - a0));
-      hoverA = a0 + da * 0.12; // smoothing factor
+      hoverA = a0 + da * 0.12; //smoothing factor
 
       hoverS += (hoverStrengthRef.current - hoverS) * 0.12;
 
@@ -366,10 +343,10 @@ export default function RadialNav({
 
             fg.r, fg.g, fg.b, 1.0,
 
-            0.40,   // radius
-            0.0028,  // thickness
-            0.08,   // spike height
-            0.030,  // noise amount
+            0.35, // radius
+            0.0028, // thickness
+            0.07, // spike height
+            0.030, // noise amount
 
             hoverA, hoverS, 0.35, 0.0,
         ])
@@ -410,8 +387,8 @@ export default function RadialNav({
       ref={canvasRef}
       className="radius-canvas"
       style={{ 
-        width: "100%", 
-        height: "100%",
+        width: "110%", 
+        height: "110%",
         pointerEvents: "none" }}
     />
   );

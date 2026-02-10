@@ -1,7 +1,7 @@
 export default function Posts() {
   return (      
       <ul>
-         <li><span>posts test</span></li>
+         <li><span>under construction</span></li>
       </ul>
     );   
 }

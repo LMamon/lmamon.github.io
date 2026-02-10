@@ -3,7 +3,6 @@
 import { useState } from "react";
 import RadialNav from "./RadialNav";
 import dynamic from "next/dynamic";
-// import { RadialNavOverlay } from "./NavOverlay";
 
 const NAV = [
   { label: "ABOUT", href: "/", angle: -1.1 },
@@ -17,14 +16,11 @@ const RadialNavOverlay = dynamic(
 );
 
 export default function ClientNav() {
-  const [active, setActive] = useState<number | null>(null);
   const [hoverAngle, setHoverAngle] = useState(0);
   const [hoverStrength, setHoverStrength] = useState(0);
 
   return (
     <>
-      {/* <RadialNav active={active} /> */}
-      
       <RadialNav
       hoverAngle={hoverAngle}
       hoverStrength={hoverStrength}
@@ -36,8 +32,6 @@ export default function ClientNav() {
           setHoverStrength(1);
         }}
         onLeave={() => setHoverStrength(0)}
-        // active={active}
-        // setActive={setActive}
       />
     </>
   );

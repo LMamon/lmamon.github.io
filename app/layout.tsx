@@ -1,19 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
-import RadialNav from "./ui/components/RadialNav";
 import "./globals.css";
-// import { RadialNavOverlay } from "./ui/components/NavOverlay";
 import ClientNav from "./ui/components/ClientNav";
+import { Roboto_Mono } from "next/font/google";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const robotoMono = Roboto_Mono({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-roboto-mono",
 });
 
 export const metadata: Metadata = {
@@ -38,33 +30,15 @@ export default function RootLayout({
       children: React.ReactNode;
     }>) {
   return (
-    <html>
+    <html className={robotoMono.variable}>
       <body>
         <main>
           <div className="layout">
-            {/* LEFT COLUMN */}
             <div className="ring-gap">
               <div className="ring"> 
-                {/* <RadialNav active={active} />
-                <RadialNavOverlay 
-                  nav={NAV}
-                  active={active}
-                  setActive={setActive} 
-                /> */}
-
                 <ClientNav />
               </div>
-
-              {/* <nav>
-                <ul>  
-                  <li><Link href="/">ABOUT</Link></li>
-                  <li><Link href="/projects">PROJECTS</Link></li>
-                  <li><Link href="/posts">POSTS</Link></li>
-                </ul>
-              </nav> */}
             </div>
-
-            {/* RIGHT COLUMN */}
             <section>
               {children}
             </section>

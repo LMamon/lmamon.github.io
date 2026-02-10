@@ -1,1 +1,1 @@
-portfolio website
+Personal profolio website to get familar with webGPU.
