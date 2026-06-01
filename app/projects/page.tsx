@@ -10,7 +10,7 @@ export default function Projects() {
           </li>
           <li className={styles.projectsRow}> 
             <a 
-              href="https://github.com/LMamon/iPhoneStreaming">iPhone Sensor Streamer App
+              href="https://github.com/LMamon/arctic-seals-rso">Mulitspectral Seal Detection
             </a>
           </li>
           <li className={styles.projectsRow}>
@@ -20,7 +20,7 @@ export default function Projects() {
           </li>
           <li className={styles.projectsRow}>
             <a 
-              href="https://github.com/LMamon/robo-sandbox">robotics sandbox
+              href="https://github.com/LMamon/RXSIM">RXSIM - autonomous uav + testbed
             </a>
           </li>
           <li className={styles.projectsRow}>
