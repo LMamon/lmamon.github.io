@@ -27,7 +27,7 @@ export default function Home() {
       </div>
       <div className={styles["aboutRow"]}>
         <span className={styles["aboutLabel"]}>profile1</span>
-        <span className={styles["aboutSeparator"]}>: </span>
+        <span className={styles["aboutSeparator"]}> : </span>
         <a 
           href="https://github.com/LMamon" 
           style={{ 
