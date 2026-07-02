@@ -5,12 +5,17 @@ export default function Projects() {
         <ul className={styles.projects}>
           <li className={styles.projectsRow}>
             <a 
+              href="https://github.com/LMamon/cuMoT.git">cuMoT
+            </a>
+          </li>
+          <li className={styles.projectsRow}>
+            <a 
               href="https://github.com/LMamon/OWLViT">OWLViT
             </a>
           </li>
           <li className={styles.projectsRow}> 
             <a 
-              href="https://github.com/LMamon/arctic-seals-rso">Mulitspectral Seal Detection
+              href="https://github.com/LMamon/arctic-seals-rso">Mulitspectral Seal Detection + Analysis
             </a>
           </li>
           <li className={styles.projectsRow}>

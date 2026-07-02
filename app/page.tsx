@@ -9,7 +9,7 @@ export default function Home() {
       </div>
       <div className={styles["aboutRow"]}>
         <span className={styles["aboutLabel"]}>location</span>
-        <span className={styles["aboutSeparator"]}>: </span>
+        <span className={styles["aboutSeparator"]}> : </span>
         <span className={styles["aboutValue"]}>[l 180°, b 0°, r 8 kpc]</span>
       </div>
       <div className={styles["aboutRow"]}>
@@ -38,7 +38,7 @@ export default function Home() {
       </div>
       <div className={styles["aboutRow"]}>
         <span className={styles["aboutLabel"]}>profile2</span>
-        <span className={styles["aboutSeparator"]}>: </span>
+        <span className={styles["aboutSeparator"]}> : </span>
         <a 
         href="https://www.kaggle.com/louisjm" 
         style={{ 
@@ -49,7 +49,7 @@ export default function Home() {
       </div>
       <div className={styles["aboutRow"]}>
         <span className={styles["aboutLabel"]}>profile3</span>
-        <span className={styles["aboutSeparator"]}>: </span>
+        <span className={styles["aboutSeparator"]}> : </span>
         <a
         href="https://huggingface.co/roylvzn"
         style={{ 
@@ -60,7 +60,7 @@ export default function Home() {
       </div>
       <div className={styles["aboutRow"]}>
         <span className={styles["aboutLabel"]}>profile4</span>
-        <span className={styles["aboutSeparator"]}>: </span>
+        <span className={styles["aboutSeparator"]}> : </span>
         <a 
         href="https://www.linkedin.com/in/vzn/" 
         style={{ 

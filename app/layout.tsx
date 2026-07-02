@@ -9,7 +9,7 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "[placeholder]",
+  title: "[Louis' Page]",
   description: "Public portfolio",
   icons: {
     icon: [{ 
