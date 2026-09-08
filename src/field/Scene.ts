@@ -29,7 +29,7 @@ export class Scene {
     container.appendChild(this.renderer.domElement);
     this.container = container;
 
-    this.points = this.createCircle();
+    this.points = this.createCylinder();
     this.scene.add(this.points);
 
     this.resizeObserver = new ResizeObserver(() => { this.resize(); });
@@ -49,6 +49,47 @@ export class Scene {
     void this.start();
   }
 
+  private createCylinder(): THREE.Points {
+    const radius = 1;
+
+    const pointsAround = 300;
+    const depthLayers = 100;
+    const depth = .2;
+
+    const count = pointsAround * depthLayers;
+    const positions = new Float32Array(count * 3);
+
+    let index = 0;
+
+    for (let layer = 0; layer < depthLayers; layer++) {
+      const z =
+        (layer / (depthLayers - 1) - 0.5) * depth;
+
+      for (let i = 0; i < pointsAround; i++) {
+        const angle = (i / pointsAround) * Math.PI * 2;
+
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+
+        positions[index] = x;
+        positions[index + 1] = y;
+        positions[index + 2] = z;
+
+        index += 3;
+      }
+    }
+
+    const geometry = new THREE.BufferGeometry();
+
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3), );
+
+    const foreground = getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim();
+
+    const material = new THREE.PointsNodeMaterial({ color: foreground, });
+
+    return new THREE.Points(geometry, material);
+  }
+
   private resize(): void {
     const width = this.container.clientWidth;
     const height = this.container.clientHeight;
@@ -61,35 +102,6 @@ export class Scene {
     this.renderer.render(this.scene, this.camera);
   }
 
-  private createCircle(): THREE.Points {
-    const count = 1000;
-    const radius = 1;
-
-    const positions = new Float32Array(count * 3);
-
-    for (let i = 0; i < count; i++) {
-      const angle = (i / count) * Math.PI * 2;
-
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      const z = 0;
-
-      const index = i * 3;
-
-      positions[index] = x;
-      positions[index + 1] = y;
-      positions[index + 2] = z;
-    }
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3), );
-
-    const foreground = getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim();
-    const material = new THREE.PointsNodeMaterial({color: foreground,});
-
-    return new THREE.Points(geometry, material);
-  }
-
   private async start(): Promise<void> {
     await this.renderer.init();
 
@@ -98,6 +110,7 @@ export class Scene {
 
   dispose(): void {
     this.points.geometry.dispose();
+    this.resizeObserver.disconnect();
     this.themeQuery.removeEventListener("change", this.onThemeChange);
 
     if (Array.isArray(this.points.material)) {
