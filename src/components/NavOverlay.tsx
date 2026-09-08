@@ -1,8 +1,4 @@
-export function RadialNavOverlay({
-  nav,
-  onHover,
-  onLeave,
-}: {
+export function RadialNavOverlay({nav, onHover, onLeave}: {
   nav: any[];
   onHover: (angle: number) => void;
   onLeave: () => void;
@@ -43,22 +39,22 @@ export function RadialNavOverlay({
               >
                 <g key={n.label}>
                     <line
-                    x1={x0}
-                    y1={y0+15}
-                    x2={x1}
-                    y2={y1}
-                    stroke="currentColor"
-                    strokeWidth="1"
-                    opacity="0.45"
+                      x1={x0}
+                      y1={y0+15}
+                      x2={x1}
+                      y2={y1}
+                      stroke="currentColor"
+                      strokeWidth="1"
+                      opacity="0.45"
                     />
                     <text
-                    x={tx}
-                    y={ty}
-                    dominantBaseline="middle"
-                    textAnchor={nx >= 0 ? "start" : "end"}
-                    fontSize="24"
-                    fill="currentColor"
-                    opacity="0.75"
+                      x={tx}
+                      y={ty}
+                      dominantBaseline="middle"
+                      textAnchor={nx >= 0 ? "start" : "end"}
+                      fontSize="24"
+                      fill="currentColor"
+                      opacity="0.75"
                     >
                     {n.label}
                     </text>

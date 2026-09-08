@@ -36,7 +36,7 @@ body {
   max-width: 100%;
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-roboto-mono);
+  font-family: "Roboto Mono", monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;;
 }

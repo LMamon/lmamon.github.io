@@ -1,19 +1,10 @@
-'use client';
-
 import { useState } from "react";
 import RadialNav from "./RadialNav";
-import dynamic from "next/dynamic";
+import { RadialNavOverlay } from "./NavOverlay";
 
-const NAV = [
-  { label: "ABOUT", href: "/", angle: -1.1 },
-  { label: "PROJECTS", href: "/projects", angle: -2 },
-  { label: "POSTS", href: "/posts", angle: 2.4 },
-];
-
-const RadialNavOverlay = dynamic(
-  () => import("./NavOverlay").then(m => m.RadialNavOverlay),
-  { ssr: false }
-);
+const NAV = [{ label: "ABOUT", href: "/", angle: -1.1 },
+             { label: "PROJECTS", href: "/projects", angle: -2 },
+             { label: "POSTS", href: "/posts", angle: 2.4 }];
 
 export default function ClientNav() {
   const [hoverAngle, setHoverAngle] = useState(0);
@@ -22,9 +13,10 @@ export default function ClientNav() {
   return (
     <>
       <RadialNav
-      hoverAngle={hoverAngle}
-      hoverStrength={hoverStrength}
+        hoverAngle={hoverAngle}
+        hoverStrength={hoverStrength}
       />
+
       <RadialNavOverlay
         nav={NAV}
         onHover={(angle) => {
