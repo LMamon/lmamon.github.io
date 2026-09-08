@@ -1,4 +1,5 @@
 import * as THREE from "three/webgpu";
+import { positionLocal, vec3, mx_noise_float,} from "three/tsl";
 
 export class Scene {
   private renderer: THREE.WebGPURenderer;
@@ -30,6 +31,7 @@ export class Scene {
     this.container = container;
 
     this.points = this.createCylinder();
+    this.points.rotation.x = Math.PI / 4;
     this.scene.add(this.points);
 
     this.resizeObserver = new ResizeObserver(() => { this.resize(); });
@@ -49,12 +51,12 @@ export class Scene {
     void this.start();
   }
 
-  private createCylinder(): THREE.Points {
+  private createCylinder(): THREE.Points<THREE.BufferGeometry, THREE.PointsNodeMaterial> {
     const radius = 1;
 
     const pointsAround = 300;
-    const depthLayers = 100;
-    const depth = .2;
+    const depthLayers = 300;
+    const depth = .3;
 
     const count = pointsAround * depthLayers;
     const positions = new Float32Array(count * 3);
@@ -85,7 +87,18 @@ export class Scene {
 
     const foreground = getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim();
 
-    const material = new THREE.PointsNodeMaterial({ color: foreground, });
+    const material = new THREE.PointsNodeMaterial({color: foreground,});
+
+    const noiseScale = 3;
+    const noiseAmplitude = 0.08;
+
+    const noise = mx_noise_float( positionLocal.mul(noiseScale), );
+
+    const radialDirection = vec3(positionLocal.x, positionLocal.y, 0, ).normalize();
+
+    const displacement = radialDirection.mul(noise.mul(noiseAmplitude), );
+
+    material.positionNode = positionLocal.add(displacement);
 
     return new THREE.Points(geometry, material);
   }
