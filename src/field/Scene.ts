@@ -4,7 +4,9 @@ export class Scene {
   private renderer: THREE.WebGPURenderer;
   private scene: THREE.Scene;
   private camera: THREE.OrthographicCamera;
-  private points: THREE.Points;
+  private points: THREE.Points<THREE.BufferGeometry, THREE.PointsNodeMaterial>;
+  private themeQuery: MediaQueryList;
+  private onThemeChange: () => void;
 
   constructor(container: HTMLElement) {
     this.scene = new THREE.Scene();
@@ -26,6 +28,17 @@ export class Scene {
 
     this.points = this.createCircle();
     this.scene.add(this.points);
+
+    this.themeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    this.onThemeChange = () => {
+      const foreground = getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim();
+
+      this.points.material.color.set(foreground);
+      this.renderer.render(this.scene, this.camera);
+    };
+
+    this.themeQuery.addEventListener("change", this.onThemeChange);
 
     void this.start();
   }
@@ -53,7 +66,8 @@ export class Scene {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3), );
 
-    const material = new THREE.PointsNodeMaterial({color: 0x18121a,});
+    const foreground = getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim();
+    const material = new THREE.PointsNodeMaterial({color: foreground,});
 
     return new THREE.Points(geometry, material);
   }
@@ -66,6 +80,7 @@ export class Scene {
 
   dispose(): void {
     this.points.geometry.dispose();
+    this.themeQuery.removeEventListener("change", this.onThemeChange);
 
     if (Array.isArray(this.points.material)) {
       for (const material of this.points.material) {
