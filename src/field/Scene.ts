@@ -63,7 +63,7 @@ export class Scene {
 
   private createCircle(): THREE.Points {
     const count = 1000;
-    const radius = .55;
+    const radius = 1;
 
     const positions = new Float32Array(count * 3);
 
