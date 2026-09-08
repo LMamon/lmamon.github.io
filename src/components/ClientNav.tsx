@@ -1,5 +1,5 @@
 import { useState } from "react";
-import RadialNav from "./RadialNav";
+import Field from "./Field";
 import { RadialNavOverlay } from "./NavOverlay";
 
 const NAV = [{ label: "ABOUT", href: "/", angle: -1.1 },
@@ -12,10 +12,10 @@ export default function ClientNav() {
 
   return (
     <>
-      <RadialNav
+      <Field />
         hoverAngle={hoverAngle}
         hoverStrength={hoverStrength}
-      />
+      {/* /> */}
 
       <RadialNavOverlay
         nav={NAV}

@@ -5,8 +5,8 @@ export default function App() {
   return (
     <main>
       <div className="layout">
-        <div className="ring-gap">
-          <div className="ring">
+        <div className="field-gap">
+          <div className="field">
             <ClientNav />
           </div>
         </div>
