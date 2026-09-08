@@ -7,6 +7,8 @@ export class Scene {
   private points: THREE.Points<THREE.BufferGeometry, THREE.PointsNodeMaterial>;
   private themeQuery: MediaQueryList;
   private onThemeChange: () => void;
+  private container: HTMLElement;
+  private resizeObserver: ResizeObserver;
 
   constructor(container: HTMLElement) {
     this.scene = new THREE.Scene();
@@ -19,15 +21,19 @@ export class Scene {
                                                 10);
 
     this.camera.position.z = 3;
-
+    
     this.renderer = new THREE.WebGPURenderer({antialias: true, alpha: true});
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(container.clientWidth, container.clientHeight, false );
-
+    
     container.appendChild(this.renderer.domElement);
+    this.container = container;
 
     this.points = this.createCircle();
     this.scene.add(this.points);
+
+    this.resizeObserver = new ResizeObserver(() => { this.resize(); });
+    this.resizeObserver.observe(container);
 
     this.themeQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
@@ -43,9 +49,21 @@ export class Scene {
     void this.start();
   }
 
+  private resize(): void {
+    const width = this.container.clientWidth;
+    const height = this.container.clientHeight;
+
+    if (width === 0 || height === 0) {
+      return;
+    }
+
+    this.renderer.setSize(width, height, false);
+    this.renderer.render(this.scene, this.camera);
+  }
+
   private createCircle(): THREE.Points {
     const count = 1000;
-    const radius = 1;
+    const radius = .55;
 
     const positions = new Float32Array(count * 3);
 

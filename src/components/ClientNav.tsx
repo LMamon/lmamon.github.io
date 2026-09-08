@@ -13,9 +13,9 @@ export default function ClientNav() {
   return (
     <>
       <Field />
-        hoverAngle={hoverAngle}
+        {/* hoverAngle={hoverAngle}
         hoverStrength={hoverStrength}
-      {/* /> */}
+      /> */}
 
       <RadialNavOverlay
         nav={NAV}
