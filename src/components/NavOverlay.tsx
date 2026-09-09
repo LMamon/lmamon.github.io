@@ -38,7 +38,7 @@ export function RadialNavOverlay({nav, onHover, onLeave}: {
                 style={{ pointerEvents: "auto", cursor: "pointer" }}
               >
                 <g key={n.label}>
-                    <line
+                    {/* <line
                       x1={x0}
                       y1={y0+15}
                       x2={x1}
@@ -46,7 +46,7 @@ export function RadialNavOverlay({nav, onHover, onLeave}: {
                       stroke="currentColor"
                       strokeWidth="1"
                       opacity="0.45"
-                    />
+                    /> */}
                     <text
                       x={tx}
                       y={ty}
