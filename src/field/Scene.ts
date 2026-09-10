@@ -1,78 +1,77 @@
 import * as THREE from "three/webgpu";
-import {exp, mx_noise_float, positionLocal, time, uniform, vec3 } from "three/tsl";
-export type SceneMode = | "idle" | "hover" | "listening";
+import {acos, exp, mx_noise_float, positionLocal, time, uniform, vec3} from "three/tsl";
 
-type SurfaceProfile = {// Geometry
-                      radius: number;
-                      pointsAround: number;
-                      depthLayers: number;
-                      depth: number;
-                      radialThickness: number;
-                      radialJitter: number;
 
-                      // Idle surface
-                      noiseSpeed: number;
+type GeometryProfile = {radius: number;
+                        pointsAround: number;
+                        depthLayers: number;
+                        depth: number;
 
-                      largeNoiseScale: number;
-                      largeNoiseAmplitude: number;
-                      largeNoiseSpeed: number;
+                        radialThickness: number;
+                        radialJitter: number;
+                      };
 
-                      mediumNoiseScale: number;
-                      mediumNoiseAmplitude: number;
-                      mediumNoiseSpeed: number;
+type SurfaceProfile = {noiseSpeed: number;
 
-                      fineNoiseScale: number;
-                      fineNoiseAmplitude: number;
-                      fineNoiseSpeed: number;
+                       largeNoiseScale: number;
+                       largeNoiseAmplitude: number;
+                       largeNoiseSpeed: number;
 
-                      // Surface dispersal
-                      scatterNoiseScale: number;
-                      scatterAmplitude: number;
+                       mediumNoiseScale: number;
+                       mediumNoiseAmplitude: number;
+                       mediumNoiseSpeed: number;
 
-                      scatterSpeedX: number;
-                      scatterSpeedY: number;
-                      scatterSpeedZ: number;
+                       fineNoiseScale: number;
+                       fineNoiseAmplitude: number;
+                       fineNoiseSpeed: number;
 
-                      depthNoiseScale: number;
-                      depthScatterAmplitude: number;
+                       scatterNoiseScale: number;
+                       scatterAmplitude: number;
 
-                      depthSpeedX: number;
-                      depthSpeedY: number;
-                      depthSpeedZ: number;
-                    };
+                       scatterSpeedX: number;
+                       scatterSpeedY: number;
+                       scatterSpeedZ: number;
+
+                       depthNoiseScale: number;
+                       depthScatterAmplitude: number;
+
+                       depthSpeedX: number;
+                       depthSpeedY: number;
+                       depthSpeedZ: number;
+                     };
 
 type FocusProfile = {width: number;
                      amplitude: number;
+
                      noiseScale: number;
                      noiseSpeed: number;
                      noiseStrength: number;
                    };
 
 type RadialWaveEvent = {active: boolean;
-                        direction: number;
+                        settling: boolean;
 
-                        coverage: number;
-                        amplitude: number;
+                        angle: number;
+                        progress: number;
 
-                        rampElapsed: number;
-                        holdElapsed: number;
-                        decayElapsed: number;
-
-                        phase: | "initial" | "ramp" | "spread" | "hold" | "decay";
+                        strength: number;
+                        strengthVelocity: number;
                       };
 
 
+// GEOMETRY
+const GEOMETRY: GeometryProfile = {// --- Geometry ---
+                                   radius: 1.0,
+                                   pointsAround: 800,
+                                   depthLayers: 80,
+                                   depth: 1,
+
+                                   radialThickness: 0.006,
+                                   radialJitter: 0.006};
+
+
 // IDLE PRESET
-const IDLE: SurfaceProfile = {// --- Geometry ---
-                              radius: 1.0,
-                              pointsAround: 800,
-                              depthLayers: 80,
-                              depth: 1,
-
-                              radialThickness: 0.001,
-                              radialJitter: 0.006,
-
-                              // --- Idle surface ---
+const IDLE: SurfaceProfile = {// --- Idle surface ---
                               noiseSpeed: 1,
 
                               largeNoiseScale: 1.0,
@@ -103,152 +102,105 @@ const IDLE: SurfaceProfile = {// --- Geometry ---
                               depthSpeedZ: 0.60};
 
 
-// HOVER / FOCUS PRESET
-const HOVER: SurfaceProfile = {// --- Geometry ---
-                              radius: 1.0,
-                              pointsAround: 800,
-                              depthLayers: 80,
-                              depth: 1,
+// LISTENING PRESET
+const LISTENING: SurfaceProfile = {// --- Listening surface ---
+                                   noiseSpeed: 0.2,
 
-                              radialThickness: 0.001,
-                              radialJitter: 0.01,
+                                   largeNoiseScale: 1.0,
+                                   largeNoiseAmplitude: 0.2,
+                                   largeNoiseSpeed: 0.8,
 
-                              // --- Idle surface ---
-                              noiseSpeed: 0.65,
+                                   mediumNoiseScale: 1.0,
+                                   mediumNoiseAmplitude: 0.012,
+                                   mediumNoiseSpeed: 0.7,
 
-                              largeNoiseScale: 20.0,
-                              largeNoiseAmplitude: 0.010,
-                              largeNoiseSpeed: 1.0,
+                                   fineNoiseScale: 1.0,
+                                   fineNoiseAmplitude: 0.06,
+                                   fineNoiseSpeed: 0.08,
 
-                              mediumNoiseScale: 12.0,
-                              mediumNoiseAmplitude: 0.012,
-                              mediumNoiseSpeed: 1.0,
+                                   // --- Surface dispersal ---
+                                   scatterNoiseScale: 0.8,
+                                   scatterAmplitude: 0.65,
 
-                              fineNoiseScale: 5.0,
-                              fineNoiseAmplitude: 0.06,
-                              fineNoiseSpeed: 1.8,
+                                   scatterSpeedX: 0.35,
+                                   scatterSpeedY: 0.55,
+                                   scatterSpeedZ: 0.25,
 
-                              // --- Surface dispersal ---
-                              scatterNoiseScale: 6.0,
-                              scatterAmplitude: 0.065,
+                                   depthNoiseScale: 2.0,
+                                   depthScatterAmplitude: 0.05,
 
-                              scatterSpeedX: 0.35,
-                              scatterSpeedY: 0.55,
-                              scatterSpeedZ: 0.25,
+                                   depthSpeedX: 0.20,
+                                   depthSpeedY: 0.30,
+                                   depthSpeedZ: 0.60};
 
-                              depthNoiseScale: 9.0,
-                              depthScatterAmplitude: 0.5,
 
-                              depthSpeedX: 0.20,
-                              depthSpeedY: 0.30,
-                              depthSpeedZ: 0.60};
-
-const FOCUS: FocusProfile = {width: 0.055,
-                             amplitude: 0.15,
+// HOVER / FOCUS
+const FOCUS: FocusProfile = {width: 0.5,
+                             amplitude: 0.2,
 
                              noiseScale: 2.0,
-                             noiseSpeed: 0.65,
-                             noiseStrength: 5.0};
+                             noiseSpeed: 0.75,
+                             noiseStrength: 0.45};
 
-// LISTENING PRESET
-const LISTENING: SurfaceProfile = {// --- Geometry ---
-                                    radius: 1.0,
-                                    pointsAround: 800,
-                                    depthLayers: 80,
-                                    depth: 1,
 
-                                    radialThickness: 0.015,
-                                    radialJitter: 0.01,
-
-                                    // --- Idle surface ---
-                                    noiseSpeed: 1,
-
-                                    largeNoiseScale: 1.0,
-                                    largeNoiseAmplitude: 0.2,
-                                    largeNoiseSpeed: 0.8,
-
-                                    mediumNoiseScale: 1.0,
-                                    mediumNoiseAmplitude: 0.012,
-                                    mediumNoiseSpeed: 1.0,
-
-                                    fineNoiseScale: 3.0,
-                                    fineNoiseAmplitude: 0.06,
-                                    fineNoiseSpeed: 0.08,
-
-                                    // --- Surface dispersal ---
-                                    scatterNoiseScale: 6.0,
-                                    scatterAmplitude: 0.065,
-
-                                    scatterSpeedX: 0.35,
-                                    scatterSpeedY: 0.55,
-                                    scatterSpeedZ: 0.25,
-
-                                    depthNoiseScale: 9.0,
-                                    depthScatterAmplitude: 0.5,
-
-                                    depthSpeedX: 0.20,
-                                    depthSpeedY: 0.30,
-                                    depthSpeedZ: 0.60};
-
-// RANDOM RADIAL WAVES
-const RADIAL_WAVE = {// Number of independent events allowed at once.
+// RANDOM RADIAL WAVE / PLUME
+const RADIAL_WAVE = {// Independent events.
                     maxEvents: 2,
 
-                    // Random delay between spawn attempts.
-                    spawnMinDelay: 53.0,
-                    spawnMaxDelay: 300.0,
+                    // Production spawn timing.
+                    spawnMinDelay: 20.0,
+                    spawnMaxDelay: 70.0,
 
-                    // Normalized circumference coverage.
-                    //
-                    // 0.00 = just born
-                    // 0.05 = small localized disturbance
-                    // 0.50 = half circumference reached
-                    // 1.00 = entire cylinder engulfed
-                    startCoverage: 0.001,
-                    rampCoverage: 0.05,
-                    maxCoverage: 1.0,
+                    // Propagation.
+                    startProgress: -0.12,
+                    rampStartProgress: 0.015,
+                    rampEndProgress: 0.08,
 
-                    // Slow initial movement intended to catch attention.
                     initialGrowthSpeed: 0.012,
+                    travelGrowthSpeed: 0.18,
 
-                    // Transition time from slow movement to normal spread.
-                    rampDuration: 1.25,
+                    // Event envelope.
+                    frontSoftness: 0.15,
+                    trailLength: 1,
 
-                    // Constant speed after the ramp completes.
-                    spreadGrowthSpeed: 0.18,
+                    // Event strength.
+                    maxAmplitude: 0.08,
+                    attackSmoothTime: 0.45,
+                    decaySmoothTime: 1.8,
 
-                    // Radial displacement.
-                    startAmplitude: 0.0,
-                    maxAmplitude: 0.20,
-                    amplitudeRiseDuration: 2.5,
-
-                    // Once the cylinder is completely engulfed,
-                    // remain fully active briefly before global decay.
-                    holdDuration: 0.35,
-
-                    // Entire affected cylinder settles together.
-                    decayDuration: 2.0,
-
-                    // Softness of the two advancing boundaries.
-                    edgeSoftness: 0.025,
-
-                    // Surface variation inside the affected region.
+                    // Turbulence.
                     noiseScale: 2.0,
                     noiseSpeed: 0.65,
-                    noiseStrength: 5.0};
+                    noiseStrength: 2.45,
+                    noiseSeedScale: 2.0,
 
-// Scene
+                    tangentialAmplitude: 0.035,
+                    depthAmplitude: 0.15,
+
+                    // Event cleanup.
+                    settleThreshold: 0.002};
+
+// MOTION
+const MOTION = {// Hover grows out more quickly than it retracts.
+                hoverAttackSmoothTime: 0.28,
+                hoverReleaseSmoothTime: 0.45,
+                
+                hoverDirectionSmoothTime: 0.22,
+
+                // Listening should breathe in and settle more slowly.
+                listeningAttackSmoothTime: 0.42,
+                listeningReleaseSmoothTime: 0.75,
+
+                // Hover and random radial displacement share this
+                // bounded influence range.
+                maxRadialExtra: 0.20};
+
+
 export class Scene {
   private renderer: THREE.WebGPURenderer;
   private scene: THREE.Scene;
   private camera: THREE.OrthographicCamera;
-
-  private idlePoints:THREE.Points<THREE.BufferGeometry, THREE.PointsNodeMaterial>;
-  private hoverPoints:THREE.Points<THREE.BufferGeometry, THREE.PointsNodeMaterial>;
-  private listeningPoints:THREE.Points<THREE.BufferGeometry, THREE.PointsNodeMaterial>;
-  private allPoints:THREE.Points<THREE.BufferGeometry, THREE.PointsNodeMaterial>[];
-
-  private mode: SceneMode = "idle";
+  private points: THREE.Points<THREE.BufferGeometry, THREE.PointsNodeMaterial>;
 
   private container: HTMLElement;
   private resizeObserver: ResizeObserver;
@@ -256,58 +208,76 @@ export class Scene {
   private themeQuery: MediaQueryList;
   private onThemeChange: () => void;
 
-  // Focus uniforms
-  private focusDirection = uniform(new THREE.Vector2(-1, 0));
-  private focusStrength = uniform(0);
 
-  // Radial wave uniforms
-  private radialWaveDirections = Array.from({length: RADIAL_WAVE.maxEvents }, 
-                                            () => uniform(new THREE.Vector2(1, 0)));
+  // Hover GPU state
+  private focusDirection = uniform(new THREE.Vector2(1, 0));
+  private focusAmount = uniform(0);
 
-  private radialWaveThresholds = Array.from({ length: RADIAL_WAVE.maxEvents }, () => uniform(1));
-  private radialWaveAmplitudes = Array.from({ length: RADIAL_WAVE.maxEvents }, () => uniform(0));
 
-  private radialWaveEvents:RadialWaveEvent[] = Array.from({ length: RADIAL_WAVE.maxEvents },
-                                                          () => this.createEmptyWaveEvent());
+  // Listening GPU state
+  private listeningAmount = uniform(0);
+
+  // Radial wave GPU state
+  private radialWaveDirections = Array.from({length: RADIAL_WAVE.maxEvents}, () => uniform(new THREE.Vector2(1, 0)));
+  private radialWaveProgress = Array.from({length: RADIAL_WAVE.maxEvents}, () => uniform(0));
+  private radialWaveStrength = Array.from({length: RADIAL_WAVE.maxEvents}, () => uniform(0));
+
+
+  // Hover CPU motion
+  private hoverTarget = 0;
+
+  private focusValue = 0;
+  private focusVelocity = 0;
+
+  private focusAngle = 0;
+  private focusAngleTarget = 0;
+  private focusAngleVelocity = 0;
+
+  // Listening CPU motion
+  private listeningTarget = 0;
+
+  private listeningValue = 0;
+  private listeningVelocity = 0;
+
+  // Radial wave CPU motion
+  private radialWaveEvents: RadialWaveEvent[] = Array.from({length: RADIAL_WAVE.maxEvents}, () => this.createEmptyWaveEvent());
 
   private nextWaveSpawnAt = 0;
   private lastFrameTime = 0;
 
+
   constructor(container: HTMLElement) {
     this.scene = new THREE.Scene();
-    this.camera = new THREE.OrthographicCamera(-2.125, 2.125, 2.125, -2.125, 0.1, 10);
+
+    this.camera = new THREE.OrthographicCamera(-2.125, 2.125,
+                                                2.125, -2.125,
+                                                0.1, 10);
 
     this.camera.position.z = 3;
 
     this.renderer = new THREE.WebGPURenderer({antialias: true, alpha: true});
-
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(container.clientWidth, container.clientHeight, false);
+
     container.appendChild(this.renderer.domElement);
 
     this.container = container;
 
-    // Build all three persistent fields once
-    this.idlePoints = this.createCylinder(IDLE, "idle");
-    this.hoverPoints = this.createCylinder(HOVER, "hover");
-
-    this.listeningPoints = this.createCylinder(LISTENING, "listening");
-    this.allPoints = [this.idlePoints, this.hoverPoints, this.listeningPoints];
-    this.scene.add(this.idlePoints, this.hoverPoints, this.listeningPoints);
-    this.setVisibleMode("idle");
+    this.points = this.createCylinder();
+    this.scene.add(this.points);
 
     // Resize
-    this.resizeObserver = new ResizeObserver(() => { this.resize(); });
+    this.resizeObserver = new ResizeObserver(() => {this.resize();});
     this.resizeObserver.observe(container);
 
     // Theme
     this.themeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
     this.onThemeChange = () => {
       const foreground = getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim();
-
-      for (const points of this.allPoints) {
-        points.material.color.set(foreground);
-      }
+      this.points.material.color.set(foreground);
     };
 
     this.themeQuery.addEventListener("change", this.onThemeChange);
@@ -315,58 +285,40 @@ export class Scene {
     void this.start();
   }
 
-  // Public visual state
-  setState(mode: SceneMode, hoverAngle = 0): void {
-    if (mode === "hover") {
-      // SVG Y increases downward.
-      // Three.js world Y increases upward.
-      //
-      // Negating sin() makes the Three.js spike
-      // point at the same screen-space direction
-      // as the SVG navigation label.
-      this.focusDirection.value.set(Math.cos(hoverAngle), -Math.sin(hoverAngle));
 
-      this.focusStrength.value = 1;
-    } else {
-      this.focusStrength.value = 0;
+  // Public interaction
+  setHover(angle: number, active: boolean): void {
+    if (active) {
+      // SVG Y increases downward while Three.js Y increases upward.
+      this.focusAngleTarget = -angle;
     }
 
-    if (mode !== this.mode) {
-      const now = performance.now() / 1000;
-
-      // Radial waves are an idle-only behavior.
-      if (this.mode === "idle" && mode !== "idle") {
-        this.resetRadialWaves(now);
-      }
-
-      if (this.mode !== "idle" && mode === "idle") {
-        this.resetRadialWaves(now);
-      }
-
-      this.mode = mode;
-      this.setVisibleMode(mode);
-    }
+    this.hoverTarget = active ? 1 : 0;
   }
 
+  setListening(active: boolean): void {
+    this.listeningTarget = active ? 1 : 0;
+  }
+
+
   // Cylinder
-  private createCylinder(profile: SurfaceProfile, behavior: | "idle" | "hover" | "listening"): 
-                                  THREE.Points<THREE.BufferGeometry, THREE.PointsNodeMaterial> {
+  private createCylinder(): THREE.Points<THREE.BufferGeometry, THREE.PointsNodeMaterial> {
     // Base geometry
-    const count = profile.pointsAround * profile.depthLayers;
+    const count = GEOMETRY.pointsAround * GEOMETRY.depthLayers;
     const positions = new Float32Array(count * 3);
 
     let index = 0;
 
-    for (let layer = 0; layer < profile.depthLayers; layer++) {
-      const layerT = layer / (profile.depthLayers - 1);
-      const z = (layerT - 0.5) * profile.depth;
+    for (let layer = 0; layer < GEOMETRY.depthLayers; layer++) {
+      const layerT = layer / (GEOMETRY.depthLayers - 1);
+      const z = (layerT - 0.5) * GEOMETRY.depth;
 
-      for (let i = 0; i < profile.pointsAround; i++) {
-        const angle = (i / profile.pointsAround) * Math.PI * 2;
+      for (let i = 0; i < GEOMETRY.pointsAround; i++) {
+        const angle = (i / GEOMETRY.pointsAround) * Math.PI * 2;
 
-        const radialOffset = (Math.random() - 0.5) * profile.radialThickness;
-        const jitter = (Math.random() - 0.5) * profile.radialJitter;
-        const pointRadius = profile.radius + radialOffset + jitter;
+        const radialOffset = (Math.random() - 0.5) * GEOMETRY.radialThickness;
+        const jitter = (Math.random() - 0.5) * GEOMETRY.radialJitter;
+        const pointRadius = GEOMETRY.radius + radialOffset + jitter;
 
         const x = Math.cos(angle) * pointRadius;
         const y = Math.sin(angle) * pointRadius;
@@ -379,314 +331,354 @@ export class Scene {
       }
     }
 
+
     // Geometry + material
     const geometry = new THREE.BufferGeometry();
-
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 
     const foreground = getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim();
-
     const material = new THREE.PointsNodeMaterial({color: foreground});
+
 
     // Common directions
     const radialDirection = vec3(positionLocal.x, positionLocal.y, 0).normalize();
     const tangentDirection = vec3(positionLocal.y.negate(), positionLocal.x, 0).normalize();
     const depthDirection = vec3(0, 0, 1);
-    const timeOffset = vec3(0, 0, time.mul(profile.noiseSpeed));
+
+
+    // Continuous idle -> listening interpolation
+    const blend = (idle: number, listening: number) => this.listeningAmount.mul(listening - idle).add(idle);
+
+    const noiseSpeed = blend(IDLE.noiseSpeed, LISTENING.noiseSpeed);
+
+    const largeNoiseScale = blend(IDLE.largeNoiseScale, LISTENING.largeNoiseScale);
+    const largeNoiseAmplitude = blend(IDLE.largeNoiseAmplitude, LISTENING.largeNoiseAmplitude);
+    const largeNoiseSpeed = blend(IDLE.largeNoiseSpeed, LISTENING.largeNoiseSpeed);
+
+    const mediumNoiseScale = blend(IDLE.mediumNoiseScale, LISTENING.mediumNoiseScale);
+    const mediumNoiseAmplitude = blend(IDLE.mediumNoiseAmplitude, LISTENING.mediumNoiseAmplitude);
+    const mediumNoiseSpeed = blend(IDLE.mediumNoiseSpeed, LISTENING.mediumNoiseSpeed);
+
+    const fineNoiseScale = blend(IDLE.fineNoiseScale, LISTENING.fineNoiseScale);
+    const fineNoiseAmplitude = blend(IDLE.fineNoiseAmplitude, LISTENING.fineNoiseAmplitude);
+    const fineNoiseSpeed = blend(IDLE.fineNoiseSpeed, LISTENING.fineNoiseSpeed);
+
+    const scatterNoiseScale = blend(IDLE.scatterNoiseScale, LISTENING.scatterNoiseScale);
+    const scatterAmplitude = blend(IDLE.scatterAmplitude, LISTENING.scatterAmplitude);
+
+    const scatterSpeedX = blend(IDLE.scatterSpeedX, LISTENING.scatterSpeedX);
+    const scatterSpeedY = blend(IDLE.scatterSpeedY, LISTENING.scatterSpeedY);
+    const scatterSpeedZ = blend(IDLE.scatterSpeedZ, LISTENING.scatterSpeedZ);
+
+    const depthNoiseScale = blend(IDLE.depthNoiseScale, LISTENING.depthNoiseScale);
+    const depthScatterAmplitude = blend(IDLE.depthScatterAmplitude, LISTENING.depthScatterAmplitude);
+
+    const depthSpeedX = blend(IDLE.depthSpeedX, LISTENING.depthSpeedX);
+    const depthSpeedY = blend(IDLE.depthSpeedY, LISTENING.depthSpeedY);
+    const depthSpeedZ = blend(IDLE.depthSpeedZ, LISTENING.depthSpeedZ);
+
+    const timeOffset = vec3(0, 0, time.mul(noiseSpeed));
 
     // Surface
-    const largeNoise =mx_noise_float(positionLocal.mul(profile.largeNoiseScale)
-                                                  .add(timeOffset.mul(profile.largeNoiseSpeed)));
+    const largeNoise = mx_noise_float(positionLocal.mul(largeNoiseScale).add(timeOffset.mul(largeNoiseSpeed)));
+    const mediumNoise = mx_noise_float(positionLocal.mul(mediumNoiseScale).add(timeOffset.mul(mediumNoiseSpeed)));
+    const fineNoise = mx_noise_float(positionLocal.mul(fineNoiseScale).add(timeOffset.mul(fineNoiseSpeed)));
 
-    const mediumNoise = mx_noise_float(positionLocal.mul(profile.mediumNoiseScale)
-                                                    .add(timeOffset.mul(profile.mediumNoiseSpeed)));
+    const surfaceNoise = largeNoise.mul(largeNoiseAmplitude)
+                                   .add(mediumNoise.mul(mediumNoiseAmplitude))
+                                   .add(fineNoise.mul(fineNoiseAmplitude));
 
-    const fineNoise = mx_noise_float(positionLocal.mul(profile.fineNoiseScale)
-                                                  .add(timeOffset.mul(profile.fineNoiseSpeed)));
-
-    const surfaceNoise = largeNoise.mul(profile.largeNoiseAmplitude)
-                                   .add(mediumNoise.mul(profile.mediumNoiseAmplitude))
-                                   .add(fineNoise.mul(profile.fineNoiseAmplitude));
-
-    const idleDisplacement = radialDirection.mul(surfaceNoise);
+    const surfaceDisplacement = radialDirection.mul(surfaceNoise);
 
     // Surface dispersal
-    const scatterNoise = mx_noise_float(positionLocal.mul(profile.scatterNoiseScale)
-                                                     .add(vec3(time.mul(profile.scatterSpeedX),
-                                                               time.mul(profile.scatterSpeedY),
-                                                               time.mul(profile.scatterSpeedZ))));
+    const scatterNoise = mx_noise_float(positionLocal.mul(scatterNoiseScale)
+                                                     .add(vec3(time.mul(scatterSpeedX),
+                                                        time.mul(scatterSpeedY),
+                                                        time.mul(scatterSpeedZ))));
 
-    const depthNoise = mx_noise_float(positionLocal.mul(profile.depthNoiseScale)
-                                                   .add(vec3(time.mul(profile.depthSpeedX),
-                                                             time.mul(profile.depthSpeedY),
-                                                             time.mul(profile.depthSpeedZ))));
+    const depthNoise = mx_noise_float(positionLocal.mul(depthNoiseScale)
+                                                   .add(vec3(time.mul(depthSpeedX),
+                                                      time.mul(depthSpeedY),
+                                                      time.mul(depthSpeedZ))));
 
-    const tangentialScatter = tangentDirection.mul(scatterNoise.mul(profile.scatterAmplitude));
-
-    const depthScatter = depthDirection.mul(depthNoise.mul(profile.depthScatterAmplitude));
+    const tangentialScatter = tangentDirection.mul(scatterNoise.mul(scatterAmplitude));
+    const depthScatter = depthDirection.mul(depthNoise.mul(depthScatterAmplitude));
     const scatterDisplacement = tangentialScatter.add(depthScatter);
 
-    // Base final position
-    let finalPosition =positionLocal.add(idleDisplacement).add(scatterDisplacement);
 
-    // Hover focus divergence
-    if (behavior === "hover") {
-      const alignment = radialDirection.x.mul(this.focusDirection.x)
-                                          .add(radialDirection.y.mul(this.focusDirection.y));
+    // Hover focus
+    const focusAlignment = radialDirection.x.mul(this.focusDirection.x)
+                                            .add(radialDirection.y.mul(this.focusDirection.y));
 
-      // 1 - cos(width) converts the old narrow
-      // angular width into a dot-product Gaussian.
-      const focusWidthScale = 1 - Math.cos(FOCUS.width);
+    const focusWidthScale = 1 - Math.cos(FOCUS.width);
+    const focusMask = exp(focusAlignment.sub(1).div(focusWidthScale));
 
-      const focusMask = exp(alignment.sub(1).div(focusWidthScale)).mul(this.focusStrength);
+    const focusNoise = mx_noise_float(positionLocal.mul(FOCUS.noiseScale)
+                                                   .add(vec3(0, 0, time.mul(FOCUS.noiseSpeed))));
 
-      const focusNoise = mx_noise_float(positionLocal.mul(FOCUS.noiseScale)
-                                                     .add(vec3(0, 0, time.mul(FOCUS.noiseSpeed))));
+    const focusVariation = focusNoise.mul(FOCUS.noiseStrength).add(1.0).max(0);
+    const focusMagnitude = focusMask.mul(this.focusAmount).mul(FOCUS.amplitude).mul(focusVariation);
+    let radialInfluence = focusMagnitude.div(MOTION.maxRadialExtra).max(0).min(1);
 
-      const focusVariation = focusNoise.mul(FOCUS.noiseStrength).add(1.0);
-      const focusDisplacement = radialDirection.mul(focusMask.mul(focusVariation).mul(FOCUS.amplitude));
+    // Random radial waves / plumes
+    const plumeScatter = vec3(0, 0, 0).toVar();
 
-      finalPosition = finalPosition.add(focusDisplacement);
+    for (let i = 0; i < RADIAL_WAVE.maxEvents; i++) {
+      const direction = this.radialWaveDirections[i];
+      const progress = this.radialWaveProgress[i];
+      const strength = this.radialWaveStrength[i];
+
+      const alignment = radialDirection.x.mul(direction.x)
+                                         .add(radialDirection.y.mul(direction.y))
+                                         .max(-1)
+                                         .min(1);
+
+      // 0 = event origin.
+      // 1 = opposite side of the cylinder.
+      //
+      // Because acos(dot()) returns unsigned angular distance,
+      // this represents both clockwise and counter-clockwise heads
+      // simultaneously.
+      const angularDistance = acos(alignment).div(Math.PI);
+
+      // The short front envelope gives the event a soft leading edge.
+      //
+      // The much longer trail envelope creates the smoke-like wake.
+      // There is no binary reached / not-reached wall.
+      const aheadDistance = angularDistance.sub(progress).max(0);
+      const behindDistance = progress.sub(angularDistance).max(0);
+
+      const frontEnvelope = exp(aheadDistance.div(RADIAL_WAVE.frontSoftness).pow(2).negate());
+      const trailEnvelope = exp(behindDistance.div(RADIAL_WAVE.trailLength).pow(2).negate());
+
+      const plumeMask = frontEnvelope.mul(trailEnvelope).mul(strength);
+
+      const plumeNoise = mx_noise_float(positionLocal.mul(RADIAL_WAVE.noiseScale)
+                                                     .add(vec3(direction.x.mul(RADIAL_WAVE.noiseSeedScale),
+                                                        direction.y.mul(RADIAL_WAVE.noiseSeedScale),
+                                                        time.mul(RADIAL_WAVE.noiseSpeed))));
+
+      const plumeVariation = plumeNoise.mul(RADIAL_WAVE.noiseStrength).add(1.0).max(0);
+
+      const plumeMagnitude = plumeMask.mul(RADIAL_WAVE.maxAmplitude).mul(plumeVariation);
+
+      const plumeInfluence = plumeMagnitude.div(MOTION.maxRadialExtra).max(0).min(1);
+
+      // Saturating union:
+      //
+      // A + B - AB
+      //
+      // Both influences remain represented while the result stays
+      // inside the shared 0..1 radial influence range.
+      radialInfluence = radialInfluence.add(plumeInfluence)
+                                       .sub(radialInfluence
+                                       .mul(plumeInfluence));
+
+      // Small off-axis motion breaks the appearance of a clean
+      // advancing ring and gives the plume a soft dragged wake.
+      const plumeTangential = tangentDirection.mul(plumeMask)
+                                              .mul(plumeNoise)
+                                              .mul(RADIAL_WAVE.tangentialAmplitude);
+
+      const plumeDepth = depthDirection.mul(plumeMask)
+                                       .mul(plumeNoise)
+                                       .mul(RADIAL_WAVE.depthAmplitude);
+
+      plumeScatter.addAssign(plumeTangential);
+      plumeScatter.addAssign(plumeDepth);
     }
 
-    // Idle random radial waves
-    if (behavior === "idle") {
-      const waveNoise = mx_noise_float(positionLocal.mul(RADIAL_WAVE.noiseScale)
-                                                    .add(vec3(0, 0, time.mul(RADIAL_WAVE.noiseSpeed))));
+    // Bounded radial interaction displacement
+    const radialExtra = radialDirection.mul(radialInfluence)
+                                       .mul(MOTION.maxRadialExtra);
 
-      const waveVariation = waveNoise.mul(RADIAL_WAVE.noiseStrength).add(1.0);
-
-      // Event 0
-      const alignment0 = radialDirection.x.mul(this.radialWaveDirections[0].x)
-                                          .add(radialDirection.y.mul(this.radialWaveDirections[0].y));
-
-      const mask0 = alignment0.sub(this.radialWaveThresholds[0])
-                              .div(RADIAL_WAVE.edgeSoftness,)
-                              .add(1)
-                              .max(0)
-                              .min(1);
-
-      let waveStrength = mask0.mul(this.radialWaveAmplitudes[0]);
-
-      // Remaining independent events.
-      for (let i = 1; i < RADIAL_WAVE.maxEvents; i++) {
-        const alignment = radialDirection.x.mul(this.radialWaveDirections[i].x)
-                                           .add(radialDirection.y
-                                              .mul(this.radialWaveDirections[i].y));
-
-        const mask = alignment.sub(this.radialWaveThresholds[i])
-                              .div(RADIAL_WAVE.edgeSoftness)
-                              .add(1)
-                              .max(0)
-                              .min(1);
-
-        const strength = mask.mul(this.radialWaveAmplitudes[i]);
-
-        // Use the strongest event rather than summing.
-        // Overlapping waves therefore never turn into an
-        // accidental 0.4 / 0.6 amplitude explosion.
-        waveStrength = waveStrength.max(strength);
-      }
-
-      const radialWaveDisplacement = radialDirection.mul(waveStrength.mul(waveVariation));
-
-      finalPosition = finalPosition.add(radialWaveDisplacement);
-    }
-
-    material.positionNode = finalPosition;
+    // Final position
+    material.positionNode = positionLocal.add(surfaceDisplacement)
+                                         .add(scatterDisplacement)
+                                         .add(radialExtra)
+                                         .add(plumeScatter);
 
     return new THREE.Points(geometry, material);
   }
 
-  private setVisibleMode(mode: SceneMode, ): void {
-    this.idlePoints.visible = mode === "idle";
+  // Continuous interaction motion
+  private updateMotion(deltaTime: number): void {
+    const hoverSmoothTime = this.hoverTarget > this.focusValue ? MOTION.hoverAttackSmoothTime : MOTION.hoverReleaseSmoothTime;
 
-    this.hoverPoints.visible = mode === "hover";
+    [this.focusValue, this.focusVelocity] = this.smoothDamp(this.focusValue,
+                                                            this.hoverTarget,
+                                                            this.focusVelocity,
+                                                            hoverSmoothTime,
+                                                            deltaTime);
 
-    this.listeningPoints.visible = mode === "listening";
+    this.focusAmount.value = this.focusValue;
+
+    // Follow the shortest direction around the circle when moving
+    // between different navigation links.
+    const angleDelta = Math.atan2(Math.sin(this.focusAngleTarget - this.focusAngle),
+                       Math.cos(this.focusAngleTarget - this.focusAngle));
+
+    const desiredAngle = this.focusAngle + angleDelta;
+
+    [this.focusAngle, this.focusAngleVelocity] = this.smoothDamp(this.focusAngle,
+                                                                 desiredAngle,
+                                                                 this.focusAngleVelocity,
+                                                                 MOTION.hoverDirectionSmoothTime,
+                                                                 deltaTime);
+
+    this.focusDirection.value.set(Math.cos(this.focusAngle), Math.sin(this.focusAngle));
+
+
+    const listeningSmoothTime = this.listeningTarget > this.listeningValue ? MOTION.listeningAttackSmoothTime : MOTION.listeningReleaseSmoothTime;
+
+    [this.listeningValue, this.listeningVelocity] = this.smoothDamp(this.listeningValue,
+                                                                    this.listeningTarget,
+                                                                    this.listeningVelocity,
+                                                                    listeningSmoothTime,
+                                                                    deltaTime);
+
+    this.listeningAmount.value = this.listeningValue;
   }
 
-  private createEmptyWaveEvent():
-    RadialWaveEvent {
-    return {
-      active: false,
-      direction: 0,
 
-      coverage: RADIAL_WAVE.startCoverage,
-
-      amplitude: RADIAL_WAVE.startAmplitude,
-
-      rampElapsed: 0,
-      holdElapsed: 0,
-      decayElapsed: 0,
-
-      phase: "initial",
-    };
-  }
-
-  private updateRadialWaves(now: number, deltaTime: number ): void {
-    if (this.mode !== "idle") return;
-
-    if (now >= this.nextWaveSpawnAt) this.spawnRadialWave(now);
+  // Random wave lifecycle
+  private updateRadialWaves(now: number, deltaTime: number): void {
+    if (now >= this.nextWaveSpawnAt) {
+      this.spawnRadialWave(now);
+    }
 
     for (let i = 0; i < this.radialWaveEvents.length; i++) {
       const event = this.radialWaveEvents[i];
 
       if (!event.active) continue;
 
-      if (event.phase !== "decay" && event.amplitude < RADIAL_WAVE.maxAmplitude) {
-        const amplitudeSpeed = RADIAL_WAVE.maxAmplitude / RADIAL_WAVE.amplitudeRiseDuration;
+      // Strength grows and decays using the same critically damped
+      // motion used by the interactive states.
+      const strengthTarget = event.settling ? 0 : 1;
+      const strengthSmoothTime = event.settling ? RADIAL_WAVE.decaySmoothTime : RADIAL_WAVE.attackSmoothTime;
 
-        event.amplitude = Math.min(RADIAL_WAVE.maxAmplitude, event.amplitude + amplitudeSpeed * deltaTime);
-      }
+      [event.strength, event.strengthVelocity] = this.smoothDamp(event.strength,
+                                                                 strengthTarget,
+                                                                 event.strengthVelocity,
+                                                                 strengthSmoothTime,
+                                                                 deltaTime);
 
-      switch (event.phase) {
-        case "initial": {
-          event.coverage += RADIAL_WAVE.initialGrowthSpeed * deltaTime;
+      // Propagation does not use discrete phases.
+      //
+      // It begins very slowly, smoothly accelerates over the first
+      // part of the circumference, then remains at constant speed.
+      if (!event.settling) {
+        const rampRange = RADIAL_WAVE.rampEndProgress - RADIAL_WAVE.rampStartProgress;
 
-          if (event.coverage >= RADIAL_WAVE.rampCoverage) {
-            event.coverage = RADIAL_WAVE.rampCoverage;
+        const rampT = THREE.MathUtils.clamp((event.progress - RADIAL_WAVE.rampStartProgress) / rampRange, 0, 1);
 
-            event.phase = "ramp";
-            event.rampElapsed = 0;
-          }
+        const smoothRamp = rampT * rampT * (3 - 2 * rampT);
 
-          break;
-        }
+        const growthSpeed = THREE.MathUtils.lerp(RADIAL_WAVE.initialGrowthSpeed,
+                                                 RADIAL_WAVE.travelGrowthSpeed,
+                                                 smoothRamp);
 
+        event.progress = Math.min(1, event.progress + growthSpeed * deltaTime);
 
-        case "ramp": {
-          event.rampElapsed += deltaTime;
-          const t = Math.min(event.rampElapsed / RADIAL_WAVE.rampDuration, 1);
-
-          // Smooth acceleration only during the ramp.
-          const smoothT = t * t * (3 - 2 * t);
-          const growthSpeed = THREE.MathUtils.lerp(RADIAL_WAVE.initialGrowthSpeed, 
-                                                  RADIAL_WAVE.spreadGrowthSpeed, 
-                                                  smoothT);
-
-          event.coverage += growthSpeed * deltaTime;
-
-          if (t >= 1) event.phase = "spread";
-
-          break;
-        }
-
-
-        case "spread": {
-          // Plateau: no more acceleration.
-          event.coverage += RADIAL_WAVE.spreadGrowthSpeed * deltaTime;
-
-          if (event.coverage >= RADIAL_WAVE.maxCoverage) {
-            event.coverage = RADIAL_WAVE.maxCoverage;
-
-            event.phase = "hold";
-            event.holdElapsed = 0;
-          }
-
-          break;
-        }
-
-
-        case "hold": {event.holdElapsed += deltaTime;
-
-          if (event.holdElapsed >= RADIAL_WAVE.holdDuration) {
-            event.phase = "decay";
-            event.decayElapsed = 0;
-          }
-
-          break;
-        }
-
-
-        case "decay": {
-          event.decayElapsed += deltaTime;
-          const t =Math.min(event.decayElapsed / RADIAL_WAVE.decayDuration, 1);
-
-          // Coverage remains at 100%.
-          // The entire cylinder settles together.
-          event.amplitude =RADIAL_WAVE.maxAmplitude * (1 - t);
-
-          if (t >= 1) {
-            this.deactivateWave(i);
-            continue;
-          }
-
-          break;
+        if (event.progress >= 1) {
+          event.progress = 1;
+          event.settling = true;
         }
       }
 
 
-      const threshold = event.coverage >= 1 ? -1 : Math.cos(Math.PI * event.coverage);
+      this.radialWaveProgress[i].value = event.progress;
+      this.radialWaveStrength[i].value = event.strength;
 
-      this.radialWaveThresholds[i].value = threshold;
-      this.radialWaveAmplitudes[i].value = event.amplitude;
+
+      // Do not reuse the slot until both visible strength and
+      // residual spring velocity have effectively disappeared.
+      if (event.settling &&
+          event.strength < RADIAL_WAVE.settleThreshold &&
+          Math.abs(event.strengthVelocity) < RADIAL_WAVE.settleThreshold) {
+
+        this.deactivateWave(i);
+      }
     }
   }
 
 
-  private spawnRadialWave(now: number, ): void {
-    const slot = this.radialWaveEvents.findIndex((event) => !event.active, );
+  private spawnRadialWave(now: number): void {
+    const slot = this.radialWaveEvents.findIndex((event) => !event.active);
 
-    // Schedule the next attempt regardless of whether
-    // all three slots are currently occupied.
     this.scheduleNextWave(now);
 
     if (slot === -1) return;
 
     const angle = Math.random() * Math.PI * 2;
-
     const event = this.radialWaveEvents[slot];
 
-    event.active = true; 
-    event.direction = angle;
-    event.coverage = RADIAL_WAVE.startCoverage;
-    event.amplitude = RADIAL_WAVE.startAmplitude;
+    event.active = true;
+    event.settling = false;
 
-    event.rampElapsed = 0;
-    event.holdElapsed = 0;
-    event.decayElapsed = 0;
+    event.angle = angle;
+    event.progress = RADIAL_WAVE.startProgress;
 
-    event.phase = "initial";
+    event.strength = 0;
+    event.strengthVelocity = 0;
 
-    this.radialWaveDirections[slot].value.set(Math.cos(angle), Math.sin(angle), );
-    this.radialWaveThresholds[slot].value = Math.cos(Math.PI * RADIAL_WAVE.startCoverage, );
-    this.radialWaveAmplitudes[slot].value = RADIAL_WAVE.startAmplitude;
+    this.radialWaveDirections[slot].value.set(Math.cos(angle), Math.sin(angle));
+    this.radialWaveProgress[slot].value = RADIAL_WAVE.startProgress;
+    this.radialWaveStrength[slot].value = 0;
   }
 
+  private createEmptyWaveEvent(): RadialWaveEvent {
+    return {active: false,
+            settling: false,
 
-  private deactivateWave(index: number, ): void {
+            angle: 0,
+            progress: RADIAL_WAVE.startProgress,
+
+            strength: 0,
+            strengthVelocity: 0};
+  }
+
+  private deactivateWave(index: number): void {
     this.radialWaveEvents[index] = this.createEmptyWaveEvent();
 
-    this.radialWaveAmplitudes[index].value = 0;
-    this.radialWaveThresholds[index].value = 1;
+    this.radialWaveProgress[index].value = RADIAL_WAVE.startProgress;
+    this.radialWaveStrength[index].value = 0;
   }
 
-
-  private resetRadialWaves( now: number, ): void {
-    for (let i = 0; i < RADIAL_WAVE.maxEvents; i++ ) {
-      this.deactivateWave(i);
-    }
-
-    this.scheduleNextWave(now);
-  }
-
-
-  private scheduleNextWave( now: number, ): void {
-    const delay =THREE.MathUtils.lerp(RADIAL_WAVE.spawnMinDelay, RADIAL_WAVE.spawnMaxDelay, Math.random(), );
+  private scheduleNextWave(now: number): void {
+    const delay = THREE.MathUtils.lerp(RADIAL_WAVE.spawnMinDelay,
+                                       RADIAL_WAVE.spawnMaxDelay,
+                                       Math.random());
 
     this.nextWaveSpawnAt = now + delay;
   }
 
+  // Closed-form critically damped spring
+  private smoothDamp(current: number, target: number, velocity: number, smoothTime: number, deltaTime: number): [number, number] {
+    const safeSmoothTime = Math.max(0.0001, smoothTime);
+    const omega = 2 / safeSmoothTime;
+
+    const offset = current - target;
+    const decay = Math.exp(-omega * deltaTime);
+
+    const temp = (velocity + omega * offset) * deltaTime;
+    const nextValue = target + (offset + temp) * decay;
+    const nextVelocity = (velocity - omega * temp) * decay;
+
+    return [nextValue, nextVelocity];
+  }
+
+  // Resize
   private resize(): void {
-    const width =this.container.clientWidth;
+    const width = this.container.clientWidth;
     const height = this.container.clientHeight;
 
     if (width === 0 || height === 0) return;
 
-    this.renderer.setSize(width, height, false, );
+    this.renderer.setSize(width, height, false);
   }
 
+  // Render loop
   private async start(): Promise<void> {
     await this.renderer.init();
 
@@ -696,35 +688,32 @@ export class Scene {
     this.scheduleNextWave(now);
 
     this.renderer.setAnimationLoop(() => {
-        const currentTime = performance.now() / 1000;
+      const currentTime = performance.now() / 1000;
 
-        // Prevent a huge jump after tab suspension.
-        const deltaTime = Math.min( currentTime - this.lastFrameTime, 0.1, );
+      // A suspended tab should resume gracefully instead of advancing
+      // the entire system several seconds in a single frame.
+      const deltaTime = Math.min(currentTime - this.lastFrameTime, 0.1);
 
-        this.lastFrameTime = currentTime;
+      this.lastFrameTime = currentTime;
 
-        this.updateRadialWaves( currentTime, deltaTime, );
+      this.updateMotion(deltaTime);
+      this.updateRadialWaves(currentTime, deltaTime);
 
-        this.renderer.render( this.scene, this.camera, );
-      },
-    );
+      this.renderer.render(this.scene, this.camera);
+    });
   }
 
-
+  // Cleanup
   dispose(): void {
-    this.renderer.setAnimationLoop(null, );
+    this.renderer.setAnimationLoop(null);
 
     this.resizeObserver.disconnect();
+    this.themeQuery.removeEventListener("change", this.onThemeChange);
 
-    this.themeQuery.removeEventListener("change", this.onThemeChange, );
-
-    for (const points of this.allPoints) {
-      points.geometry.dispose();
-      points.material.dispose();
-    }
+    this.points.geometry.dispose();
+    this.points.material.dispose();
 
     this.renderer.dispose();
-
     this.renderer.domElement.remove();
   }
 }

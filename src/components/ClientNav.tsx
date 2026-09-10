@@ -1,23 +1,17 @@
 import { useEffect, useState } from "react";
-import Field, { type FieldMode } from "./Field";
+import Field from "./Field";
 import { RadialNavOverlay } from "./NavOverlay";
 
 const NAV = [
-  { label: "ABOUT", href: "/", angle: -1.1 },
-  { label: "PROJECTS", href: "/projects", angle: -2 },
-  { label: "POSTS", href: "/posts", angle: 2.4 },
+  {label: "ABOUT", href: "/", angle: -1.1},
+  {label: "PROJECTS", href: "/projects", angle: -2},
+  {label: "POSTS", href: "/posts", angle: 2.4},
 ];
 
 function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) {
-    return false;
-  }
+  if (!(target instanceof HTMLElement)) return false;
 
-  return (
-    target.tagName === "INPUT" ||
-    target.tagName === "TEXTAREA" ||
-    target.isContentEditable
-  );
+  return target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
 }
 
 export default function ClientNav() {
@@ -27,27 +21,18 @@ export default function ClientNav() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.code !== "Space" || isEditableTarget(event.target)
-      ) {
-        return;
-      }
+      if (event.code !== "Space" || isEditableTarget(event.target)) return;
 
       event.preventDefault();
 
-      if (!event.repeat) {
-        setListening(true);
-      }
+      if (!event.repeat) setListening(true);
     };
 
     const onKeyUp = (event: KeyboardEvent) => {
-      if (
-        event.code !== "Space" || isEditableTarget(event.target)
-      ) {
-        return;
-      }
+      if (event.code !== "Space" || isEditableTarget(event.target)) return;
 
       event.preventDefault();
+
       setListening(false);
     };
 
@@ -66,13 +51,12 @@ export default function ClientNav() {
     };
   }, []);
 
-  const mode: FieldMode = listening ? "listening" : hovered ? "hover" : "idle";
-
   return (
     <>
       <Field
-        mode={mode}
+        hovered={hovered}
         hoverAngle={hoverAngle}
+        listening={listening}
       />
 
       <RadialNavOverlay
