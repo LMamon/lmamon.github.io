@@ -8,13 +8,17 @@ const NAV = [
   {label: "POSTS", href: "/posts", angle: 2.4},
 ];
 
+type ClientNavProps = {
+  onNavigate: (href: string) => void;
+};
+
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
 
   return target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
 }
 
-export default function ClientNav() {
+export default function ClientNav({onNavigate}: ClientNavProps) {
   const [hoverAngle, setHoverAngle] = useState(0);
   const [hovered, setHovered] = useState(false);
   const [listening, setListening] = useState(false);
@@ -68,6 +72,7 @@ export default function ClientNav() {
         onLeave={() => {
           setHovered(false);
         }}
+        onNavigate={onNavigate}
       />
     </>
   );

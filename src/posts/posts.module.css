@@ -1,0 +1,96 @@
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform:translateY(10px)
+    }
+    to {
+        opacity: 1;
+        transform:translateY(0)
+    }
+}
+
+.posts {
+  flex: 1 1 0%;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.postsRow {
+  display: block;
+  opacity: 0;
+  animation: slideUp;
+  animation-duration: 0.6s;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+  line-height: 20px;
+}
+
+.posts li + li {
+  margin-top: 0.45rem;
+}
+
+.postLink{
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-align: left;
+}
+
+.post {
+  line-height: 1.6;
+  animation: slideUp 0.6s ease-out both;
+}
+
+.back {
+  margin-bottom: 2rem;
+}
+
+.post h1 {
+  margin: 0 0 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.post h2,
+.post h3 {
+  margin: 2rem 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.post p {
+  margin: 0 0 1rem;
+}
+
+.post ul,
+.post ol {
+  margin: 0 0 1rem;
+  padding-left: 1.5rem;
+}
+
+.post a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.post pre {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid currentColor;
+}
+
+.post code {
+  font-family: inherit;
+}
+
+.post img {
+  max-width: 100%;
+  height: auto;
+}

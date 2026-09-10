@@ -8,17 +8,15 @@ type NavOverlayProps = {
   nav: NavItem[];
   onHover: (angle: number) => void;
   onLeave: () => void;
+  onNavigate: (href: string) => void;
 };
 
-export function RadialNavOverlay({ nav, onHover, onLeave, }: NavOverlayProps) {
+export function RadialNavOverlay({ nav, onHover, onLeave, onNavigate, }: NavOverlayProps) {
   const size = 500;
-  const cx = size / 2.1;
-  const cy = size / 2.1;
-  const r = size * 0.55;
+  const cx = size / 2.3;
+  const cy = size / 2.4;
+  const r = size * 0.45;
 
-  // Roboto Mono at 24px is approximately this wide
-  // per character. These only control the hover box,
-  // not text placement.
   const characterWidth = 14.4;
   const hitPaddingX = 8;
   const hitHeight = 34;
@@ -45,9 +43,13 @@ export function RadialNavOverlay({ nav, onHover, onLeave, }: NavOverlayProps) {
 
         return (
           <a
-            key={item.label}
+           key={item.label}
             href={item.href}
             aria-label={item.label}
+            onClick={(event) => {
+              event.preventDefault();
+              onNavigate(item.href);
+            }}
             onPointerEnter={() => { onHover(item.angle); }}
             onPointerLeave={onLeave}
             style={{ pointerEvents: "auto", cursor: "pointer", }}
@@ -60,7 +62,6 @@ export function RadialNavOverlay({ nav, onHover, onLeave, }: NavOverlayProps) {
               fill="transparent"
               pointerEvents="all"
             />
-
             <text
               x={tx}
               y={ty}

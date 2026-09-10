@@ -195,7 +195,6 @@ const MOTION = {// Hover grows out more quickly than it retracts.
                 // bounded influence range.
                 maxRadialExtra: 0.20};
 
-
 export class Scene {
   private renderer: THREE.WebGPURenderer;
   private scene: THREE.Scene;
@@ -257,7 +256,7 @@ export class Scene {
 
     this.renderer = new THREE.WebGPURenderer({antialias: true, alpha: true});
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    
+
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(container.clientWidth, container.clientHeight, false);
 
@@ -338,7 +337,6 @@ export class Scene {
 
     const foreground = getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim();
     const material = new THREE.PointsNodeMaterial({color: foreground});
-
 
     // Common directions
     const radialDirection = vec3(positionLocal.x, positionLocal.y, 0).normalize();
